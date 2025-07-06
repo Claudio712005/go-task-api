@@ -1,6 +1,9 @@
 package routes
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/Claudio712005/go-task-api/middleware"
+	"github.com/gin-gonic/gin"
+)
 
 type Route struct {
 	Method  string
@@ -14,10 +17,11 @@ func CarregarRotas(router *gin.RouterGroup){
 	rotas := []Route{}
 	
 	rotas = append(rotas, AgruparRotasUsuarios()...)
+	rotas = append(rotas, AgruparRotasAutenticacao()...)
 
 	for _, rota := range rotas {
 		if rota.hasAuth {
-			// ...
+			router.Handle(rota.Method, rota.Path, middleware.AutenticacaoMiddleware(), rota.Handler)
 		} else {
 			router.Handle(rota.Method, rota.Path, rota.Handler)
 		}

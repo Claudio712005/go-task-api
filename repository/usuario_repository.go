@@ -9,6 +9,7 @@ import (
 type UsuarioRepository interface {
 	CadastrarUsuario(usuario *models.Usuario) (uint64, error)
 	BuscarPorEmail(email string) (*models.Usuario, error)
+	BuscarPorID(id uint64) (*models.Usuario, error)
 }
 
 type usuarioRepository struct {
@@ -36,5 +37,15 @@ func (r *usuarioRepository) BuscarPorEmail(email string) (*models.Usuario, error
 	if err := r.db.Where("email = ?", email).First(&usuario).Error; err != nil {
 		return nil, err
 	}
+	return &usuario, nil
+}
+
+// BuscarPorID busca um usuário pelo ID
+func (r *usuarioRepository) BuscarPorID(id uint64) (*models.Usuario, error) {
+	var usuario models.Usuario
+	if err := r.db.Select("id, nome, email, criado_em").First(&usuario, id).Error; err != nil {
+		return nil, err
+	}
+
 	return &usuario, nil
 }

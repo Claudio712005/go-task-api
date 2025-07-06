@@ -1,0 +1,156 @@
+basePath: /api
+definitions:
+  models.Login:
+    properties:
+      email:
+        type: string
+      senha:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - senha
+    type: object
+  models.Usuario:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      nome:
+        minLength: 3
+        type: string
+      senha:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - nome
+    - senha
+    type: object
+  util.ErrorResponse:
+    properties:
+      message:
+        example: Erro
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  util.SuccessResponse:
+    properties:
+      data: {}
+      success:
+        type: boolean
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Esta é a API de gerenciamento de tarefas
+  title: Go Task API
+  version: "1.0"
+paths:
+  /autenticar:
+    post:
+      consumes:
+      - application/json
+      description: Autentica um usuário no sistema e retorna um token JWT
+      parameters:
+      - description: Dados de login do usuário
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Usuário autenticado com sucesso
+          schema:
+            $ref: '#/definitions/util.SuccessResponse'
+        "400":
+          description: Dados inválidos
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "401":
+          description: Senha incorreta
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: Usuário não encontrado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Autentica um usuário
+      tags:
+      - Autenticação
+  /usuarios:
+    post:
+      consumes:
+      - application/json
+      description: Cadastra um novo usuário no sistema
+      parameters:
+      - description: Dados do usuário
+        in: body
+        name: usuario
+        required: true
+        schema:
+          $ref: '#/definitions/models.Usuario'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Usuário cadastrado com sucesso
+          schema:
+            $ref: '#/definitions/util.SuccessResponse'
+        "400":
+          description: Dados inválidos
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "409":
+          description: Usuário já cadastrado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Cadastra um novo usuário
+      tags:
+      - Usuários
+  /usuarios/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Busca um usuário pelo ID fornecido
+      parameters:
+      - description: ID do usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Usuário encontrado
+          schema:
+            $ref: '#/definitions/util.SuccessResponse'
+        "404":
+          description: Usuário não encontrado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Busca um usuário pelo ID
+      tags:
+      - Usuários
+swagger: "2.0"

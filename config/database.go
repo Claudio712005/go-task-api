@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-
-	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -14,10 +12,6 @@ var DB *gorm.DB
 
 // ConectarBanco estabelece a conexão com o banco de dados
 func ConectarBanco() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Erro ao carregar o arquivo .env", err)
-	}
 
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
