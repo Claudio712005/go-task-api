@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/Claudio712005/go-task-api/models"
 	"gorm.io/gorm"
@@ -14,6 +15,8 @@ type TarefaRepository interface {
 	BuscarTarefaPorTitulo(titulo string) (*models.Tarefa, error)
 	BuscarTarefaPorID(id uint64) (*models.Tarefa, error)
 	AtualizarTarefa(tarefa *models.Tarefa) error
+	ConcluirTarefa(id uint64) error
+	DeletarTarefa(id uint64) error
 }
 
 type tarefaRepository struct {
@@ -89,6 +92,37 @@ func (r *tarefaRepository) AtualizarTarefa(tarefa *models.Tarefa) error {
 	}
 
 	if err := r.db.Model(&tarefa).Updates(update).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ConcluirTarefa marca uma tarefa como concluída
+func (r *tarefaRepository) ConcluirTarefa(id uint64) error {
+	if id == 0 {
+		return errors.New("ID inválido")
+	}
+
+	update := map[string]interface{}{
+		"concluida":   true,
+		"concluida_em": time.Now(),
+	}
+
+	if err := r.db.Model(&models.Tarefa{}).Where("id = ?", id).Updates(update).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeletarTarefa deleta uma tarefa pelo ID
+func (r *tarefaRepository) DeletarTarefa(id uint64) error {
+	if id == 0 {
+		return errors.New("ID inválido")
+	}
+
+	if err := r.db.Delete(&models.Tarefa{}, id).Error; err != nil {
 		return err
 	}
 

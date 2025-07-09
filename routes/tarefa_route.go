@@ -20,20 +20,32 @@ func AgruparRotasTarefas() []Route {
 		{
 			Method:  "GET",
 			hasAuth: true,
-			Path:   tarefaBasePath(""),
+			Path:    tarefaBasePath(""),
 			Handler: controllers.BuscarTarefasPorUsuarioHandler,
 		},
 		{
 			Method:  "GET",
 			hasAuth: true,
-			Path:  tarefaBasePath("/:id"),
+			Path:    tarefaBasePath("/:id"),
 			Handler: controllers.BuscarTarefaPorIDHandler,
 		},
 		{
 			Method:  "PUT",
 			hasAuth: true,
-			Path: tarefaBasePath("/:id"),
+			Path:    tarefaBasePath("/:id"),
 			Handler: controllers.AtualizarTarefaHandler,
+		},
+		{
+			Method:  "DELETE",
+			hasAuth: true,
+			Path:    tarefaBasePath("/:id"),
+			Handler: controllers.DeletarTarefaHandler,
+		},
+		{
+			Method:  "POST",
+			hasAuth: true,
+			Path:    tarefaBasePath("/:id/concluir"),
+			Handler: controllers.ConcluirTarefaHandler,
 		},
 	}
 }

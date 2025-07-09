@@ -158,7 +158,7 @@ func BuscarTarefaPorIDHandler(c *gin.Context) {
 // @Failure 500 {object} util.ErrorResponse "Erro interno"
 // @Router /tarefas/{id} [put]
 // AtualizarTarefaHandler atualiza os dados de uma tarefa existente
-func AtualizarTarefaHandler(c *gin.Context){
+func AtualizarTarefaHandler(c *gin.Context) {
 	idTarefa := c.Param("id")
 	id, err := strconv.ParseUint(idTarefa, 10, 64)
 	if err != nil {
@@ -206,4 +206,121 @@ func AtualizarTarefaHandler(c *gin.Context){
 	}
 
 	util.ResponseSuccess(c, 200, "Tarefa atualizada com sucesso")
+}
+
+// ConcluirTarefaHandler godoc
+// @Summary Conclui uma tarefa
+// @Description Marca uma tarefa como concluída
+// @Tags Tarefas
+// @Accept json
+// @Produce json
+// @Param id path uint64 true "ID da tarefa"
+// @Success 204 {object} util.SuccessResponse "Tarefa concluída com sucesso"
+// @Failure 400 {object} util.ErrorResponse "ID inválido ou tarefa já concluída"
+// @Failure 401 {object} util.ErrorResponse "Usuário não autenticado"
+// @Failure 403 {object} util.ErrorResponse "Usuário não autorizado a concluir a tarefa de outro usuário"
+// @Failure 404 {object} util.ErrorResponse "Tarefa não encontrada"
+// @Failure 500 {object} util.ErrorResponse "Erro interno"
+// @Router /tarefas/{id}/concluir [post]
+// ConcluirTarefaHandler marca uma tarefa como concluída
+func ConcluirTarefaHandler(c *gin.Context) {
+	id := c.Param("id")
+	idUint, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		util.ResponseError(c, 400, "ID inválido")
+		return
+	}
+
+	repositorio := repository.NewTarefaRepository(config.DB)
+
+	tarefa, err := repositorio.BuscarTarefaPorID(idUint)
+	if err != nil {
+		if err.Error() == "record not found" {
+			util.ResponseError(c, 404, "Tarefa não encontrada")
+			return
+		}
+		util.ResponseError(c, 500, "Erro ao buscar tarefa: "+err.Error())
+		return
+	}
+
+	tokenID, err := security.ExtrairUsuarioID(c.GetHeader("Authorization"))
+	if err != nil {
+		util.ResponseError(c, 401, "Usuário não autenticado")
+		return
+	}
+
+	if tarefa.UsuarioID != tokenID {
+		util.ResponseError(c, 403, "Usuário não autorizado a concluir a tarefa de outro usuário")
+		return
+	}
+
+	if tarefa.Concluida {
+		util.ResponseError(c, 400, "Tarefa já está concluída")
+		return
+	}
+
+	if err := repositorio.ConcluirTarefa(idUint); err != nil {
+		util.ResponseError(c, 500, "Erro ao concluir tarefa: "+err.Error())
+		return
+	}
+
+	util.ResponseSuccess(c, 204, "")
+}
+
+// DeletarTarefa godoc
+// @Summary Deleta uma tarefa
+// @Description Deleta uma tarefa pelo ID
+// @Tags Tarefas
+// @Accept json
+// @Produce json
+// @Param id path uint64 true "ID da tarefa"
+// @Success 204 {object} util.SuccessResponse "Tarefa deletada com sucesso"
+// @Failure 400 {object} util.ErrorResponse "ID inválido"
+// @Failure 401 {object} util.ErrorResponse "Usuário não autenticado"
+// @Failure 403 {object} util.ErrorResponse "Usuário não autorizado a deletar esta tarefa"
+// @Failure 404 {object} util.ErrorResponse "Tarefa não encontrada"
+// @Failure 500 {object} util.ErrorResponse "Erro interno"
+// @Router /tarefas/{id} [delete]
+// DeletarTarefa deleta uma tarefa pelo ID
+func DeletarTarefaHandler(c *gin.Context) {
+	idTarefa := c.Param("id")
+	id, err := strconv.ParseUint(idTarefa, 10, 64)
+	if err != nil {
+		util.ResponseError(c, 400, "ID inválido")
+		return
+	}
+
+	tokenID, err := security.ExtrairUsuarioID(c.GetHeader("Authorization"))
+	if err != nil {
+		util.ResponseError(c, 401, "Usuário não autenticado")
+		return
+	}
+
+	repositorio := repository.NewTarefaRepository(config.DB)
+
+	tarefaExistente, err := repositorio.BuscarTarefaPorID(id)
+	if err != nil {
+		if err.Error() == "record not found" {
+			util.ResponseError(c, 404, "Tarefa não encontrada")
+			return
+		}
+		util.ResponseError(c, 500, "Erro ao buscar tarefa: "+err.Error())
+		return
+	}
+
+	if tarefaExistente.UsuarioID != tokenID {
+		util.ResponseError(c, 403, "Usuário não autorizado a deletar esta tarefa")
+		return
+	}
+
+	if err := repositorio.DeletarTarefa(id); err != nil {
+		if err.Error() == "record not found" {
+			util.ResponseError(c, 404, "Tarefa não encontrada")
+			return
+		}
+		util.ResponseError(c, 500, "Erro ao deletar tarefa: "+err.Error())
+		return
+	}
+
+	util.ResponseSuccess(c, 204, nil)
 }
