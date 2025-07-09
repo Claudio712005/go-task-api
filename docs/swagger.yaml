@@ -11,9 +11,64 @@ definitions:
     - email
     - senha
     type: object
+  models.Page:
+    properties:
+      data:
+        items: {}
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      sort_by:
+        type: string
+      sort_order:
+        type: string
+      total:
+        type: integer
+      total_pages:
+        type: integer
+    type: object
+  models.Senha:
+    properties:
+      senha_atual:
+        minLength: 6
+        type: string
+      senha_nova:
+        minLength: 6
+        type: string
+    required:
+    - senha_atual
+    - senha_nova
+    type: object
+  models.Tarefa:
+    properties:
+      atualizado_em:
+        type: string
+      concluida:
+        type: boolean
+      concluida_em:
+        type: string
+      criado_em:
+        type: string
+      descricao:
+        minLength: 5
+        type: string
+      id:
+        type: integer
+      titulo:
+        minLength: 3
+        type: string
+      usuario_id:
+        type: integer
+    required:
+    - descricao
+    - titulo
+    - usuario_id
+    type: object
   models.Usuario:
     properties:
-      created_at:
+      criado_em:
         type: string
       email:
         type: string
@@ -90,6 +145,288 @@ paths:
       summary: Autentica um usuário
       tags:
       - Autenticação
+  /tarefas:
+    get:
+      consumes:
+      - application/json
+      description: Busca todas as tarefas associadas ao usuário autenticado
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lista de tarefas do usuário
+          schema:
+            items:
+              $ref: '#/definitions/models.Tarefa'
+            type: array
+        "401":
+          description: Usuário não autenticado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Busca as tarefas de um usuário
+      tags:
+      - Tarefas
+    post:
+      consumes:
+      - application/json
+      description: Cadastra uma nova tarefa para o usuário autenticado
+      parameters:
+      - description: Dados da tarefa
+        in: body
+        name: tarefa
+        required: true
+        schema:
+          $ref: '#/definitions/models.Tarefa'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Tarefa cadastrada com sucesso
+          schema:
+            $ref: '#/definitions/util.SuccessResponse'
+        "400":
+          description: Dados inválidos
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "401":
+          description: Usuário não autenticado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: Usuário não autorizado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "409":
+          description: Tarefa já cadastrada
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Cadastra uma nova tarefa
+      tags:
+      - Tarefas
+  /tarefas/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deleta uma tarefa pelo ID
+      parameters:
+      - description: ID da tarefa
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tarefa deletada com sucesso
+          schema:
+            $ref: '#/definitions/util.SuccessResponse'
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "401":
+          description: Usuário não autenticado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: Usuário não autorizado a deletar esta tarefa
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: Tarefa não encontrada
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Deleta uma tarefa
+      tags:
+      - Tarefas
+    get:
+      consumes:
+      - application/json
+      description: Busca uma tarefa específica pelo ID fornecido
+      parameters:
+      - description: ID da tarefa
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tarefa encontrada
+          schema:
+            $ref: '#/definitions/models.Tarefa'
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "401":
+          description: Usuário não autenticado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: Usuário não autorizado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: Tarefa não encontrada
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Busca uma tarefa por ID
+      tags:
+      - Tarefas
+    put:
+      consumes:
+      - application/json
+      description: Atualiza os dados de uma tarefa existente
+      parameters:
+      - description: ID da tarefa
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dados da tarefa
+        in: body
+        name: tarefa
+        required: true
+        schema:
+          $ref: '#/definitions/models.Tarefa'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tarefa atualizada com sucesso
+          schema:
+            $ref: '#/definitions/util.SuccessResponse'
+        "400":
+          description: Dados inválidos
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "401":
+          description: Usuário não autenticado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: Usuário não autorizado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: Tarefa não encontrada
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Atualiza uma tarefa existente
+      tags:
+      - Tarefas
+  /tarefas/{id}/concluir:
+    post:
+      consumes:
+      - application/json
+      description: Marca uma tarefa como concluída
+      parameters:
+      - description: ID da tarefa
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Tarefa concluída com sucesso
+          schema:
+            $ref: '#/definitions/util.SuccessResponse'
+        "400":
+          description: ID inválido ou tarefa já concluída
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "401":
+          description: Usuário não autenticado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: Usuário não autorizado a concluir a tarefa de outro usuário
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: Tarefa não encontrada
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Conclui uma tarefa
+      tags:
+      - Tarefas
+  /tarefas/paginado:
+    get:
+      consumes:
+      - application/json
+      description: Busca tarefas de um usuário com paginação
+      parameters:
+      - default: 1
+        description: Número da página
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Número de itens por página
+        in: query
+        name: limit
+        type: integer
+      - default: '"id"'
+        description: Campo para ordenação
+        in: query
+        name: sort_by
+        type: string
+      - default: '"asc"'
+        description: Direção da ordenação
+        in: query
+        name: sort_order
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Página de tarefas
+          schema:
+            $ref: '#/definitions/models.Page'
+        "400":
+          description: Parâmetros inválidos
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "401":
+          description: Usuário não autenticado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Busca tarefas paginadas
+      tags:
+      - Tarefas
   /usuarios:
     post:
       consumes:
@@ -125,6 +462,44 @@ paths:
       tags:
       - Usuários
   /usuarios/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deleta um usuário existente pelo ID
+      parameters:
+      - description: ID do usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Usuário deletado com sucesso
+        "400":
+          description: ID inválido
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: Você não tem permissão para deletar este usuário
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: Usuário não encontrado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Deleta um usuário existente
+      tags:
+      - Usuários
     get:
       consumes:
       - application/json
@@ -151,6 +526,90 @@ paths:
           schema:
             $ref: '#/definitions/util.ErrorResponse'
       summary: Busca um usuário pelo ID
+      tags:
+      - Usuários
+    put:
+      consumes:
+      - application/json
+      description: Atualiza os dados de um usuário existente
+      parameters:
+      - description: ID do usuário
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Dados do usuário
+        in: body
+        name: usuario
+        required: true
+        schema:
+          $ref: '#/definitions/models.Usuario'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Usuário atualizado com sucesso
+          schema:
+            $ref: '#/definitions/util.SuccessResponse'
+        "400":
+          description: Dados inválidos
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: Você não tem permissão para atualizar
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: Usuário não encontrado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Atualiza um usuário existente
+      tags:
+      - Usuários
+  /usuarios/senha:
+    post:
+      consumes:
+      - application/json
+      description: Atualiza a senha do usuário autenticado
+      parameters:
+      - description: Dados da senha
+        in: body
+        name: senha
+        required: true
+        schema:
+          $ref: '#/definitions/models.Senha'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Senha atualizada com sucesso
+          schema:
+            $ref: '#/definitions/util.SuccessResponse'
+        "400":
+          description: Dados inválidos
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "401":
+          description: Token inválido
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "403":
+          description: Você não tem permissão para atualizar a senha
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "404":
+          description: Usuário não encontrado
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+        "500":
+          description: Erro interno
+          schema:
+            $ref: '#/definitions/util.ErrorResponse'
+      summary: Atualiza a senha do usuário
       tags:
       - Usuários
 swagger: "2.0"

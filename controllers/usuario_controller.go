@@ -223,6 +223,21 @@ func DeletarUsuarioHandler(c *gin.Context) {
 	util.ResponseSuccess(c, 204, nil)
 }
 
+// AtualizarSenhaHandler godoc
+// @Summary Atualiza a senha do usuário
+// @Description Atualiza a senha do usuário autenticado
+// @Tags Usuários
+// @Accept json
+// @Produce json
+// @Param senha body models.Senha true "Dados da senha"
+// @Success 200 {object} util.SuccessResponse "Senha atualizada com sucesso"
+// @Failure 400 {object} util.ErrorResponse "Dados inválidos"
+// @Failure 401 {object} util.ErrorResponse "Token inválido"
+// @Failure 403 {object} util.ErrorResponse "Você não tem permissão para atualizar a senha"
+// @Failure 404 {object} util.ErrorResponse "Usuário não encontrado"
+// @Failure 500 {object} util.ErrorResponse "Erro interno"
+// @Router /usuarios/senha [post]
+// AtualizarSenhaHandler atualiza a senha do usuário autenticado
 func AtualizarSenhaHandler(c *gin.Context) {
 	tokenId, err := security.ExtrairUsuarioID(c.GetHeader("Authorization"))
 	if err != nil {
