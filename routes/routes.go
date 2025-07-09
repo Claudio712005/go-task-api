@@ -18,6 +18,7 @@ func CarregarRotas(router *gin.RouterGroup){
 	
 	rotas = append(rotas, AgruparRotasUsuarios()...)
 	rotas = append(rotas, AgruparRotasAutenticacao()...)
+	rotas = append(rotas, AgruparRotasTarefas()...)
 
 	for _, rota := range rotas {
 		if rota.hasAuth {
