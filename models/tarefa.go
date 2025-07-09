@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -20,9 +21,22 @@ type Tarefa struct {
 }
 
 // Validar valida os campos da tarefa
-func (t *Tarefa) Validar() error {
-	if err := util.ValidarCampos(t); err != nil {
+func (t *Tarefa) Validar(tipo string) error {
+	
+	if err := util.ValidarCampos(t); err != nil && tipo == "cadastrar" {
 		return err
+	}
+
+	if tipo == "atualizar" {
+		if t.ID == 0 {
+			return errors.New("ID da tarefa não pode ser zero")
+		}
+		if t.Titulo == "" {
+			return errors.New("título é obrigatório")
+		}
+		if t.Descricao == "" {
+			return errors.New("descrição é obrigatória")
+		}
 	}
 
 	t.preparar()

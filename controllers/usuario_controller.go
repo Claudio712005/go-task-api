@@ -171,6 +171,8 @@ func AtualizarUsuarioHandler(c *gin.Context) {
 		util.ResponseError(c, 500, "Erro ao atualizar usuário")
 		return
 	}
+
+	util.ResponseSuccess(c, 200, "Usuário atualizado com sucesso")
 }
 
 // DeletarUsuarioHandler godoc

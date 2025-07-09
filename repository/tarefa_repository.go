@@ -12,6 +12,8 @@ type TarefaRepository interface {
 	CadastrarTarefa(tarefa *models.Tarefa) (uint64, error)
 	BuscarTarefasPorUsuario(usuarioID uint64) ([]models.Tarefa, error)
 	BuscarTarefaPorTitulo(titulo string) (*models.Tarefa, error)
+	BuscarTarefaPorID(id uint64) (*models.Tarefa, error)
+	AtualizarTarefa(tarefa *models.Tarefa) error
 }
 
 type tarefaRepository struct {
@@ -58,4 +60,37 @@ func (r *tarefaRepository) BuscarTarefaPorTitulo(titulo string) (*models.Tarefa,
 		return nil, err
 	}
 	return &tarefa, nil
+}
+
+// BuscarTarefaPorID busca uma tarefa pelo ID
+func (r *tarefaRepository) BuscarTarefaPorID(id uint64) (*models.Tarefa, error) {
+	
+	if id == 0 {
+		return nil, errors.New("ID inválido")
+	}
+
+	var tarefa models.Tarefa
+	if err := r.db.First(&tarefa, id).Error; err != nil {
+		return nil, err
+	}
+
+	return &tarefa, nil
+}
+
+// AtualizarTarefa atualiza uma tarefa existente
+func (r *tarefaRepository) AtualizarTarefa(tarefa *models.Tarefa) error {
+	update := map[string] interface{}{
+		"titulo":       tarefa.Titulo,
+		"descricao":   tarefa.Descricao,
+	}
+
+	if tarefa.ID == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	if err := r.db.Model(&tarefa).Updates(update).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
