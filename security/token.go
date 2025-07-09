@@ -40,3 +40,24 @@ func ValidarToken(tokenString string) error {
 
 	return nil
 }
+
+func ExtrairUsuarioID(tokenString string) (uint64, error) {
+
+	tokenString = tokenString[len("Bearer "):] 
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+
+	if err != nil {
+		return 0, err
+	}
+
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if usuarioID, ok := claims["usuario_id"].(float64); ok {
+			return uint64(usuarioID), nil
+		}
+	}
+
+	return 0, fmt.Errorf("invalid token claims")
+}

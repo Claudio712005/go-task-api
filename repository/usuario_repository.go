@@ -10,6 +10,7 @@ type UsuarioRepository interface {
 	CadastrarUsuario(usuario *models.Usuario) (uint64, error)
 	BuscarPorEmail(email string) (*models.Usuario, error)
 	BuscarPorID(id uint64) (*models.Usuario, error)
+	AtualizarUsuario(usuario *models.Usuario) error
 }
 
 type usuarioRepository struct {
@@ -48,4 +49,22 @@ func (r *usuarioRepository) BuscarPorID(id uint64) (*models.Usuario, error) {
 	}
 
 	return &usuario, nil
+}
+
+// AtualizarUsuario atualiza os dados de um usuário existente
+func (r *usuarioRepository) AtualizarUsuario(usuario *models.Usuario) error {
+
+	updates := map[string]interface{}{
+		"nome":  usuario.Nome,
+		"email": usuario.Email,
+	}
+
+	if usuario.ID == 0 {
+		return gorm.ErrRecordNotFound
+	}
+	if err := r.db.Model(&usuario).Updates(updates).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -18,5 +18,11 @@ func AgruparRotasUsuarios() []Route {
 			Handler: controllers.BuscarUsuarioPorIdHandler,
 			hasAuth: true,
 		},
+		{
+			Method:  "PUT",
+			Path:   "/usuarios/:id",
+			Handler: controllers.AtualizarUsuarioHandler,
+			hasAuth: true,
+		},
 	}
 }

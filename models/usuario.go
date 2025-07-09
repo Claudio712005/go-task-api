@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -17,9 +18,21 @@ type Usuario struct {
 }
 
 // Validar valida os campos do usuário
-func (u *Usuario) Validar() error {
-	if err := util.ValidarCampos(u); err != nil {
+func (u *Usuario) Validar(tipo string) error {
+	if err := util.ValidarCampos(u); err != nil && tipo == "cadastrar" {
 		return err
+	}
+
+	if(tipo == "atualizar") {
+		if u.ID == 0 {
+			return errors.New("ID do usuário não pode ser zero")
+		}
+		if u.Nome == "" {
+			return errors.New("nome é obrigatório")
+		}
+		if u.Email == "" {
+			return errors.New("email é obrigatório")
+		}
 	}
 
 	u.preparar()
