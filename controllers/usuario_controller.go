@@ -222,3 +222,52 @@ func DeletarUsuarioHandler(c *gin.Context) {
 
 	util.ResponseSuccess(c, 204, nil)
 }
+
+func AtualizarSenhaHandler(c *gin.Context) {
+	tokenId, err := security.ExtrairUsuarioID(c.GetHeader("Authorization"))
+	if err != nil {
+		util.ResponseError(c, 401, "Token inválido")
+		return
+	}
+
+	senha := models.Senha{}
+	if err := c.ShouldBindJSON(&senha); err != nil {
+		util.ResponseError(c, 400, "Corpo da requisição inválido")
+		return
+	}
+
+	if err := senha.Validar("atualizar"); err != nil {
+		util.ResponseError(c, 400, "Erro de validação: "+err.Error())
+		return
+	}
+
+	repositorio := repository.NewUsuarioRepository(config.DB)
+	senhaHash, err := repositorio.BuscarSenha(tokenId)
+	if err != nil {
+		if err.Error() == "record not found" {
+			util.ResponseError(c, 404, "Usuário não encontrado")
+			return
+		}
+		util.ResponseError(c, 500, "Erro ao buscar usuário")
+		return
+	}
+
+	if err := security.VerificarSenha(senha.SenhaAtual, senhaHash); err != nil {
+		util.ResponseError(c, 400, "Senha atual incorreta")
+		return
+	}
+
+	senhaNovaCriptografada, err := security.CriptografarSenha(senha.SenhaNova)
+	if err != nil {
+		util.ResponseError(c, 500, "Erro ao criptografar senha nova")
+		return
+	}
+
+	novaSenhaHash := senhaNovaCriptografada
+	if err := repositorio.AtualizarSenha(tokenId, novaSenhaHash); err != nil {
+		util.ResponseError(c, 500, "Erro ao atualizar senha")
+		return
+	}
+
+	util.ResponseSuccess(c, 200, "Senha atualizada com sucesso")
+}

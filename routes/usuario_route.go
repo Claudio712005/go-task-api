@@ -39,5 +39,11 @@ func AgruparRotasUsuarios() []Route {
 			Handler: controllers.DeletarUsuarioHandler,
 			hasAuth: true,
 		},
+		{
+			Method: "POST",
+			Path:  usuarioBasePath("/senha"),
+			Handler: controllers.AtualizarSenhaHandler,
+			hasAuth: true,
+		},
 	}
 }
