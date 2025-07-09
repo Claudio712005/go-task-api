@@ -172,3 +172,51 @@ func AtualizarUsuarioHandler(c *gin.Context) {
 		return
 	}
 }
+
+// DeletarUsuarioHandler godoc
+// @Summary Deleta um usuário existente
+// @Description Deleta um usuário existente pelo ID
+// @Tags Usuários
+// @Accept json
+// @Produce json
+// @Param id path uint64 true "ID do usuário"
+// @Success 204 "Usuário deletado com sucesso"
+// @Failure 400 {object} util.ErrorResponse "ID inválido"
+// @Failure 401 {object} util.ErrorResponse "Token inválido"
+// @Failure 403 {object} util.ErrorResponse "Você não tem permissão para deletar este usuário"
+// @Failure 404 {object} util.ErrorResponse "Usuário não encontrado"
+// @Failure 500 {object} util.ErrorResponse "Erro interno"
+// @Router /usuarios/{id} [delete]
+// DeletarUsuarioHandler deleta um usuário existente pelo ID
+func DeletarUsuarioHandler(c *gin.Context) {
+	idParam := c.Param("id")
+
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		util.ResponseError(c, 400, "ID inválido")
+		return
+	}
+
+	idToken, err := security.ExtrairUsuarioID(c.GetHeader("Authorization"))
+	if err != nil {
+		util.ResponseError(c, 401, "Token inválido")
+		return
+	}
+
+	if id != idToken {
+		util.ResponseError(c, 403, "Você não tem permissão para deletar este usuário")
+		return
+	}
+
+	repositorio := repository.NewUsuarioRepository(config.DB)
+	if err := repositorio.DeletarUsuario(id); err != nil {
+		if err.Error() == "record not found" {
+			util.ResponseError(c, 404, "Usuário não encontrado")
+			return
+		}
+		util.ResponseError(c, 500, "Erro ao deletar usuário")
+		return
+	}
+
+	util.ResponseSuccess(c, 204, nil)
+}

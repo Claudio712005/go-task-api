@@ -11,6 +11,7 @@ type UsuarioRepository interface {
 	BuscarPorEmail(email string) (*models.Usuario, error)
 	BuscarPorID(id uint64) (*models.Usuario, error)
 	AtualizarUsuario(usuario *models.Usuario) error
+	DeletarUsuario(id uint64) error
 }
 
 type usuarioRepository struct {
@@ -63,6 +64,19 @@ func (r *usuarioRepository) AtualizarUsuario(usuario *models.Usuario) error {
 		return gorm.ErrRecordNotFound
 	}
 	if err := r.db.Model(&usuario).Updates(updates).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// DeletarUsuario deleta um usuário pelo ID
+func (r *usuarioRepository) DeletarUsuario(id uint64) error {
+	if id == 0 {
+		return gorm.ErrRecordNotFound
+	}
+
+	if err := r.db.Delete(&models.Usuario{}, id).Error; err != nil {
 		return err
 	}
 
