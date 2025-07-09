@@ -324,3 +324,61 @@ func DeletarTarefaHandler(c *gin.Context) {
 
 	util.ResponseSuccess(c, 204, nil)
 }
+
+// BuscarTarefasPaginadoHandler godoc
+// @Summary Busca tarefas paginadas
+// @Description Busca tarefas de um usuário com paginação
+// @Tags Tarefas
+// @Accept json
+// @Produce json
+// @Param page query int false "Número da página" default(1)
+// @Param limit query int false "Número de itens por página" default(10)
+// @Param sort_by query string false "Campo para ordenação" default("id")
+// @Param sort_order query string false "Direção da ordenação" default("asc")
+// @Success 200 {object} models.Page "Página de tarefas"
+// @Failure 400 {object} util.ErrorResponse "Parâmetros inválidos"
+// @Failure 401 {object} util.ErrorResponse "Usuário não autenticado"
+// @Failure 500 {object} util.ErrorResponse "Erro interno"
+// @Router /tarefas/paginado [get]
+// BuscarTarefasPaginadoHandler busca tarefas de um usuário com paginação
+func BuscarTarefasPaginadoHandler(c *gin.Context) {
+	page := c.DefaultQuery("page", "1")
+	limit := c.DefaultQuery("limit", "10")
+	sortBy := c.DefaultQuery("sort_by", "id")
+	sortOrder := c.DefaultQuery("sort_order", "asc")
+
+	tokenID, err := security.ExtrairUsuarioID(c.GetHeader("Authorization"))
+	if err != nil {
+		util.ResponseError(c, 401, "Usuário não autenticado")
+		return
+	}
+
+	pageInt, err := strconv.ParseInt(page, 10, 64)
+	if err != nil || pageInt < 1 {
+		util.ResponseError(c, 400, "Página inválida")
+		return
+	}
+
+	limitInt, err := strconv.ParseInt(limit, 10, 64)
+	if err != nil || limitInt < 1 {
+		util.ResponseError(c, 400, "Limite inválido")
+		return
+	}
+
+	pagina := &models.Page{
+		Page:      pageInt,
+		Content:      []interface{}{},
+		Limit:     limitInt,
+		SortBy:    sortBy,
+		SortOrder: sortOrder,
+	}
+
+	repositorio := repository.NewTarefaRepository(config.DB)
+
+	if err := repositorio.BuscarTarefasPaginado(tokenID, pagina); err != nil {
+		util.ResponseError(c, 500, "Erro ao buscar tarefas: "+err.Error())
+		return
+	}
+
+	util.ResponseSuccess(c, 200, pagina)
+}

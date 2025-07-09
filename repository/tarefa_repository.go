@@ -2,6 +2,8 @@ package repository
 
 import (
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Claudio712005/go-task-api/models"
@@ -17,6 +19,7 @@ type TarefaRepository interface {
 	AtualizarTarefa(tarefa *models.Tarefa) error
 	ConcluirTarefa(id uint64) error
 	DeletarTarefa(id uint64) error
+	BuscarTarefasPaginado(idUsuario uint64, pagina *models.Page) (error)
 }
 
 type tarefaRepository struct {
@@ -49,7 +52,7 @@ func (r *tarefaRepository) BuscarTarefasPorUsuario(usuarioID uint64) ([]models.T
 	if err := r.db.Where("usuario_id = ?", usuarioID).Find(&tarefas).Error; err != nil {
 		return nil, err
 	}
-	
+
 	return tarefas, nil
 }
 
@@ -67,7 +70,7 @@ func (r *tarefaRepository) BuscarTarefaPorTitulo(titulo string) (*models.Tarefa,
 
 // BuscarTarefaPorID busca uma tarefa pelo ID
 func (r *tarefaRepository) BuscarTarefaPorID(id uint64) (*models.Tarefa, error) {
-	
+
 	if id == 0 {
 		return nil, errors.New("ID inválido")
 	}
@@ -82,9 +85,9 @@ func (r *tarefaRepository) BuscarTarefaPorID(id uint64) (*models.Tarefa, error) 
 
 // AtualizarTarefa atualiza uma tarefa existente
 func (r *tarefaRepository) AtualizarTarefa(tarefa *models.Tarefa) error {
-	update := map[string] interface{}{
-		"titulo":       tarefa.Titulo,
-		"descricao":   tarefa.Descricao,
+	update := map[string]interface{}{
+		"titulo":    tarefa.Titulo,
+		"descricao": tarefa.Descricao,
 	}
 
 	if tarefa.ID == 0 {
@@ -105,7 +108,7 @@ func (r *tarefaRepository) ConcluirTarefa(id uint64) error {
 	}
 
 	update := map[string]interface{}{
-		"concluida":   true,
+		"concluida":    true,
 		"concluida_em": time.Now(),
 	}
 
@@ -126,5 +129,74 @@ func (r *tarefaRepository) DeletarTarefa(id uint64) error {
 		return err
 	}
 
+	return nil
+}
+
+// BuscarTarefasPaginado busca tarefas de um usuário com paginação
+func (r *tarefaRepository) BuscarTarefasPaginado(idUsuario uint64, pagina *models.Page) (error) {
+	var tarefas []models.Tarefa
+	var total int64
+
+	if idUsuario == 0 {
+		return errors.New("ID de usuário inválido")
+	}
+
+	if pagina.Page == 0 {
+		pagina.Page = 1
+	}
+	if pagina.Limit == 0 {
+		pagina.Limit = 10
+	}
+	if pagina.SortBy == "" {
+		pagina.SortBy = "criado_em"
+	}
+	if pagina.SortOrder == "" {
+		pagina.SortOrder = "desc"
+	}
+
+	validSortFields := map[string]bool{
+		"id":            true,
+		"titulo":        true,
+		"criado_em":     true,
+		"atualizado_em": true,
+		"concluida":     true,
+	}
+
+	sortField := strings.ToLower(pagina.SortBy)
+	sortOrder := strings.ToLower(pagina.SortOrder)
+
+	if !validSortFields[sortField] {
+		sortField = "criado_em"
+	}
+	if sortOrder != "asc" && sortOrder != "desc" {
+		sortOrder = "desc"
+	}
+
+	orderClause := fmt.Sprintf("%s %s", sortField, sortOrder)
+
+	if err := r.db.Model(&models.Tarefa{}).
+		Where("usuario_id = ?", idUsuario).
+		Count(&total).Error; err != nil {
+		return err
+	}
+
+	if err := r.db.Where("usuario_id = ?", idUsuario).
+		Order(orderClause).
+		Limit(int(pagina.Limit)).
+		Offset(int((pagina.Page - 1) * pagina.Limit)).
+		Find(&tarefas).Error; err != nil {
+		return err
+	}
+
+	pagina.Total = total
+	pagina.TotalPages = (pagina.Total + pagina.Limit - 1) / pagina.Limit
+
+	content := make([]interface{}, len(tarefas))
+
+	for i, tarefa := range tarefas {
+		content[i] = tarefa
+	}
+
+	pagina.Content = content
 	return nil
 }

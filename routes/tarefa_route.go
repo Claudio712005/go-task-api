@@ -47,5 +47,11 @@ func AgruparRotasTarefas() []Route {
 			Path:    tarefaBasePath("/:id/concluir"),
 			Handler: controllers.ConcluirTarefaHandler,
 		},
+		{
+			Method:  "GET",
+			hasAuth: true,
+			Path:    tarefaBasePath("/paginado"),
+			Handler: controllers.BuscarTarefasPaginadoHandler,
+		},
 	}
 }
